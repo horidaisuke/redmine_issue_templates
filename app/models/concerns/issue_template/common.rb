@@ -77,6 +77,8 @@ module Concerns
 
       def generate_json
         result = attributes
+        result['issue_title'].gsub!(/#\{\w+\}/, context)
+        result['description'].gsub!(/#\{\w+\}/, context)
         result[:checklist] = checklist
         result.except('checklist_json')
       end
@@ -138,6 +140,17 @@ module Concerns
         self.class.where(tracker_id: tracker_id).reorder(:position, :id).pluck(:id).each_with_index do |record_id, p|
           self.class.where(id: record_id).update_all(position: p + 1)
         end
+      end
+
+      def context
+        today = Date.today
+        user = User.current
+        context = {
+            '#{today}' => today.strftime('%Y/%m/%d'),
+            '#{login}' => user.login,
+            '#{firstname}' => user.firstname,
+            '#{lastname}' => user.lastname
+        }
       end
     end
   end
